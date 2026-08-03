@@ -65,7 +65,7 @@ const setupListener = socket => {
         const responseContent = headers.map(header => `${header.key}: ${header.value}`).join(newlineSeparator);
         respond(socket, '200 OK', responseContent);
       } else {
-        socket.end(`HTTP/1.1 404 Not Found${newlineSeparator}Content-Type: text/plain${bodySeparator}`);
+        respond(socket, '404 Not Found', '');
       }
       parseState = 'start';
     }
