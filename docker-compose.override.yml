@@ -1,0 +1,7 @@
+services:
+  hw-05:
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules

@@ -1,0 +1,9 @@
+*.pem
+node_modules
+.git
+.gitignore
+.env
+*.md
+Dockerfile*
+docker-compose*.yml
+dist
