@@ -1,5 +1,8 @@
 services:
   hw-05:
+    build:
+      target: builder
+    command: npm run dev
     environment:
       - NODE_ENV=development
     volumes:
