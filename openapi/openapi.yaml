@@ -1,0 +1,448 @@
+openapi: 3.0.3
+info:
+  title: swgss-army-knife
+  description: Image conversion and compression API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+security: []
+paths:
+  /users/{id}:
+    get:
+      operationId: getUserById
+      summary: Get a user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/PositiveInt'
+      responses:
+        '200':
+          description: The requested user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '404':
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+  /users:
+    get:
+      operationId: listUsers
+      summary: List users
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: The maximum number of users to return
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CursorToken'
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - items
+                  - next_cursor
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  next_cursor:
+                    $ref: '#/components/schemas/CursorToken'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+    post:
+      operationId: createUser
+      summary: Create a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUser'
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: A unique identifier for the request. If the request is retried, the same idempotency key should be used.
+          required: true
+      responses:
+        '201':
+          description: User creation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '409':
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '422':
+          description: Unprocessable entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+
+  /conversions:
+    get:
+      operationId: listConversions
+      summary: List image conversions
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: The maximum number of conversions to return
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CursorToken'
+      responses:
+        '200':
+          description: A list of image conversions
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - items
+                  - next_cursor
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversion'
+                  next_cursor:
+                    $ref: '#/components/schemas/CursorToken'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+
+  /conversions/start:
+    post:
+      operationId: startConversion
+      summary: Start an image conversion
+      tags:
+        - conversions
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StartConversion'
+            encoding:
+              images:
+                contentType: image/jpeg, image/png, image/webp, image/gif, image/avif, image/svg+xml
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          description: A unique identifier for the request. If the request is retried, the same idempotency key should be used.
+          required: true
+      responses:
+        '201':
+          description: Conversion started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversion'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '409':
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '413':
+          description: Request entity too large
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '415':
+          description: Unsupported media type
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '422':
+          description: Unprocessable entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '429':
+          description: Too many requests
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+
+components:
+  schemas:
+    ProblemJson:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        errors:
+          type: array
+    PositiveInt:
+      type: integer
+      format: int64
+      minimum: 1
+    Username:
+      type: string
+      minLength: 3
+      maxLength: 32
+      pattern: '^[a-zA-Z0-9_]+$'
+    Email:
+      type: string
+      format: email
+      maxLength: 254
+    ImageFormat:
+      type: string
+      enum:
+        - svg
+        - jpeg
+        - png
+        - webp
+        - gif
+        - avif
+    CursorToken:
+      type: string
+      nullable: true
+      description: The cursor to start from. This is an opaque token
+    
+    CreateUser:
+      type: object
+      additionalProperties: false
+      required:
+        - username
+        - email
+      properties:
+        username:
+          $ref: '#/components/schemas/Username'
+        email:
+          $ref: '#/components/schemas/Email'
+    User:
+      type: object
+      additionalProperties: false
+      required:
+        - username
+        - email
+        - id
+      properties:
+        username:
+          $ref: '#/components/schemas/Username'
+        email:
+          $ref: '#/components/schemas/Email'
+        id:
+          $ref: '#/components/schemas/PositiveInt'
+    
+    ConvertedVersion:
+      type: object
+      additionalProperties: false
+      required:
+        - hashedOriginal
+      properties:
+        hashedOriginal:
+          type: string
+          pattern: '^[a-fA-F0-9]{64}\.(jpeg|png|webp|gif|avif|svg)$'
+          description: SHA-256 hex digest of the original file followed by the file extension
+        url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL of the converted image
+    Conversion:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - userId
+        - destinationFormat
+        - versions
+        - status
+      properties:
+        id:
+          $ref: '#/components/schemas/PositiveInt'
+        userId:
+          $ref: '#/components/schemas/PositiveInt'
+        destinationFormat:
+          $ref: '#/components/schemas/ImageFormat'
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConvertedVersion'
+        status:
+          type: string
+          enum:
+            - pending
+            - completed
+            - failed
+    StartConversion:
+      type: object
+      required:
+        - format
+        - images
+      properties:
+        format:
+          $ref: '#/components/schemas/ImageFormat'
+        images:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: string
+            format: binary
