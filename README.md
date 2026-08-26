@@ -16,7 +16,10 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
   console.log('Idempotency-Key: required =',idem?.required,'· опис, символів =',(idem?.description??'').trim().length)"
   ```
 
-Before running requests tests, start the development version of the server with command `npm start` or `yarn start`. After you see `Server is running on port 3000`, you will be able to do the tests below.
+Before running requests tests, start the development version of the server. There are two options:
+- `npm start` or `yarn start`: if there is a local Redis server listening on port 6379, the backend will use it to store idempotency keys; otherwise, it will fall back to in-memory storage. Use it if you already have such local Redis server.
+- `docker-compose up -d`: before starting the backend, a Docker container with Redis 8.10.1 will be set up. Don't use it if there is a local Redis server listening on port 6379.
+After you see `Server is running on port 3000`, you will be able to do the tests below.
 
 - List pagination check:
   * Make the first request for conversions:

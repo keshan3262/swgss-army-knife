@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { claimTmpKey, finishTmpKey, getPlainValue } from './redis';
+import { claimTmpKey, finishTmpKey, getPlainValue } from './key-value-store';
 import { IdempotencyConflictException, IdempotencyKeyReuseException } from './errors';
 import { withAsyncException } from './with-async-exception';
 

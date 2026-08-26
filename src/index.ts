@@ -57,6 +57,8 @@ app.post('/conversions/start', startConversion);
 
 app.get('/conversions', listConversions);
 
+app.get('/health', (_, res) => res.status(200).json({ status: 'ok' }));
+
 const titleByStatus: Record<number, string> = {
   400: 'Bad Request',
   401: 'Unauthorized',

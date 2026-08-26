@@ -335,6 +335,8 @@ components:
         instance:
           type: string
           format: uri
+        errors:
+          type: array
     PositiveInt:
       type: integer
       format: int64
@@ -357,13 +359,6 @@ components:
         - webp
         - gif
         - avif
-    IdObject:
-      type: object
-      required:
-        - id
-      properties:
-        id:
-          $ref: '#/components/schemas/PositiveInt'
     CursorToken:
       type: string
       nullable: true
@@ -400,7 +395,6 @@ components:
       additionalProperties: false
       required:
         - hashedOriginal
-        - url
       properties:
         hashedOriginal:
           type: string
@@ -409,6 +403,7 @@ components:
         url:
           type: string
           format: uri
+          nullable: true
           description: URL of the converted image
     Conversion:
       type: object

@@ -13,7 +13,7 @@ export interface Conversion {
   status: 'pending' | 'completed' | 'failed';
   versions: {
     hashedOriginal: string;
-    url: string;
+    url?: string;
   }[];
 }
 
@@ -78,7 +78,6 @@ const dummyConversions: Conversion[] = [
       },
       {
         hashedOriginal: '905cf0f01005865823cac0fa66352e119f78fad5abd358ccf92dc988e9e3571f.jpeg',
-        url: ''
       }
     ]
   },
@@ -106,7 +105,6 @@ const dummyConversions: Conversion[] = [
     versions: [
       {
         hashedOriginal: '9cc2f1c0f7179aa27f2d5aa6b0448fe71254618d027a970fb7528db5df44924c.png',
-        url: ''
       }
     ]
   },
@@ -168,10 +166,7 @@ export const createConversion = async (
     ...rest,
     id: nextConversionId++,
     status: 'pending',
-    versions: images.map(image => ({
-      hashedOriginal: image,
-      url: ''
-    }))
+    versions: images.map(image => ({ hashedOriginal: image }))
   };
   dummyConversions.push(newConversion);
 
