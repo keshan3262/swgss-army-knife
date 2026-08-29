@@ -41,7 +41,7 @@ export class ParseFilesPipe implements PipeTransform {
         ],
         exceptionFactory: error =>
           new UnsupportedMediaTypeException({
-            errors: [{ in: 'images', message: error }]
+            errors: [{ field: 'images', rules: [error] }]
           })
       });
     }
@@ -58,7 +58,7 @@ export class ParseFilesPipe implements PipeTransform {
         : `Must upload at least ${minCount} files`;
 
       throw this.exceptionFactory({
-        errors: [{ in: field, message }]
+        errors: [{ field, rules: [message] }]
       });
     }
 

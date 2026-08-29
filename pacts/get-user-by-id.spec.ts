@@ -135,8 +135,8 @@ describe('GET /users/:id', () => {
           detail: like('The request is invalid'),
           instance: like('/users/abc'),
           errors: MatchersV3.eachLike({
-            in: 'id',
-            message: like('Value must be a integer within the interval [1, Infinity]')
+            field: 'id',
+            rules: like(['Value must be a integer within the interval [1, Infinity]'])
           })
         });
       })
@@ -153,8 +153,8 @@ describe('GET /users/:id', () => {
         });
         expect(body.errors).toEqual([
           {
-            in: 'id',
-            message: 'Value must be a integer within the interval [1, Infinity]'
+            field: 'id',
+            rules: ['Value must be a integer within the interval [1, Infinity]']
           }
         ]);
       }));
@@ -174,7 +174,9 @@ describe('GET /users/:id', () => {
     let providerBaseUrl: string;
 
     beforeAll(async () => {
-      process.env.PG_DB_URL ??= 'postgres://postgres:postgres@localhost:5432/swgss-army-knife';
+      process.env.PORT ??= '3000';
+      process.env.PG_DB_HOST ??= 'localhost';
+      process.env.PG_DB_PORT ??= '5432';
       process.env.REDIS_URL ??= 'redis://localhost:6379';
       app = await createApp({ logger: false });
       await app.listen(0, '127.0.0.1');

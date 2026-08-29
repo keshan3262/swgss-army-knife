@@ -5,6 +5,7 @@ import { validate } from './utils/env';
 import { ConversionsController } from './controllers/conversions.controller';
 import { HealthController } from './controllers/health.controller';
 import { UsersController } from './controllers/users.controller';
+import { PostgresPool, RedisDb } from './utils/dbs';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersController } from './controllers/users.controller';
       envFilePath: ['.env', '../.env'],
     }),
   ],
-  controllers: [HealthController, UsersController, ConversionsController]
+  controllers: [HealthController, UsersController, ConversionsController],
+  providers: [RedisDb, PostgresPool]
 })
 export class AppModule {}

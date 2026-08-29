@@ -16,7 +16,7 @@ export class ParseCursorPipe implements PipeTransform {
         throw new Error('Invalid cursor');
       }
     } catch {
-      throw new BadRequestErrorWithBody([{ in: metadata.data ?? metadata.type, message: 'Invalid cursor' }]);
+      throw new BadRequestErrorWithBody([{ field: metadata.data ?? metadata.type, rules: ['Invalid cursor'] }]);
     }
 
     return { startId };

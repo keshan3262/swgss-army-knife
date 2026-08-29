@@ -6,12 +6,11 @@ import {
   NestInterceptor,
   UnprocessableEntityException
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { createHash } from 'node:crypto';
-import { createClient } from 'redis';
 import { from, mergeMap, Observable, of } from 'rxjs';
-import { Env } from '../utils/env';
+import { RedisDb } from '../utils/dbs';
+import { BadRequestErrorWithBody } from '../utils/bad-request-error-with-body';
 
 const TTL_SECONDS = 24 * 60 * 60;
 
@@ -23,37 +22,31 @@ interface IdemRecord {
 }
 
 class RedisStore {
-  private client: ReturnType<typeof createClient>;
-  constructor(url: string) {
-    this.client = createClient({ url });
-  }
-  async connect() {
-    await this.client.connect();
-  }
+  constructor(private readonly redis: RedisDb) {}
+
   async claim(key: string, rec: IdemRecord) {
     // SET NX — атомарний «хто перший»: конкурентний повтор програє чесно
-    const res = await this.client.set(`idem:${key}`, JSON.stringify(rec), {
+    const res = await this.redis.client.set(`idem:${key}`, JSON.stringify(rec), {
       NX: true,
       EX: TTL_SECONDS,
     });
     return res === 'OK';
   }
   async finish(key: string, rec: IdemRecord) {
-    await this.client.set(`idem:${key}`, JSON.stringify(rec), { EX: TTL_SECONDS });
+    await this.redis.client.set(`idem:${key}`, JSON.stringify(rec), { EX: TTL_SECONDS });
   }
   async get(key: string) {
-    const raw = await this.client.get(`idem:${key}`);
+    const raw = await this.redis.client.get(`idem:${key}`);
     return raw ? (JSON.parse(raw) as IdemRecord) : null;
   }
 }
 
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
-  private store: RedisStore;
+  private readonly store: RedisStore;
 
-  constructor(config: ConfigService<Env, true>) {
-    this.store = new RedisStore(config.get('REDIS_URL', { infer: true }));
-    this.store.connect();
+  constructor(redisDb: RedisDb) {
+    this.store = new RedisStore(redisDb);
   }
 
   intercept(ctx: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -62,7 +55,9 @@ export class IdempotencyInterceptor implements NestInterceptor {
     if (req.method !== 'POST') return next.handle();
 
     const key = req.header('idempotency-key');
-    if (!key) return next.handle();
+    if (!key) {
+      throw new BadRequestErrorWithBody([{ field: 'idempotency-key', rules: ['Idempotency-Key header is required'] }]);
+    }
 
     return from(this.handle(key, req, res, next)).pipe(mergeMap((obs) => obs));
   }

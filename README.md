@@ -1,6 +1,6 @@
 # swgss-army-knife
 
-This is a prototype not of Marketplace API, but of API for compressing and converting images. Contract part is implemented according to the option B (Express server with `express-openapi-validator`).
+This is a prototype not of Marketplace API, but of API for compressing and converting images.
 
 ## Testing
 
@@ -15,23 +15,47 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
   console.log('операцій:',ops.length,'· ресурсів:',new Set(Object.keys(s.paths).map(p=>p.split('/')[1])).size);\
   console.log('Idempotency-Key: required =',idem?.required,'· опис, символів =',(idem?.description??'').trim().length)"
   ```
+- Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env` or `yarn run check:env`.
 
-Before running requests tests, start the development version of the server. There are two options:
-- `npm start` or `yarn start`: if there is a local Redis server listening on port 6379, the backend will use it to store idempotency keys; otherwise, it will fall back to in-memory storage. Use it if you already have such local Redis server.
-- `docker-compose up -d`: before starting the backend, a Docker container with Redis 8.10.1 will be set up. Don't use it if there is a local Redis server listening on port 6379.
-After you see `Server is running on port 3000`, you will be able to do the tests below.
+Before starting the local version of backend, set up these environment variables in `.env`:
+- `PORT`: the number of the port where the backend will listen.
+- `BASE_URL`: the base URL for backend, default is `http://localhost:<PORT>`.
+- `PG_DB_HOST`: the hostname of PostgreSQL database.
+- `PG_DB_PORT`: the port number for PostgreSQL database.
+- `REDIS_URL`: the complete URL for Redis DB.
+Also set the password for PostgreSQL database in `secrets/db_password` file unless you want to do with the default password (`app-v1-password`) and you are going to start the server with Docker containers. Anyway, you will be able to rotate it later.
 
+Before running requests tests, start the server. There are two options:
+- `npm start` or `yarn start`: make sure you have:
+  * Redis and PostgreSQL already launched with the specified credentials.
+  * `app_user` user in the PostgreSQL DB with the specified password.
+  * `secrets/db_password` file with the matching password.
+- `./up.sh`: before starting the backend, Docker containers for DBs will be set up. Don't use it if there is a local Redis server listening on port 20000 or PostgreSQL server listening on port 20001.
+After you see `Server is running on port <PORT>` (in a terminal or a container console), you will be able to do the tests below.
+
+- Healthcheck and password rotation:
+  1. Check backend health and uptime:
+     ```shell
+     curl -H "Content-Type: application/json" http://localhost:3000/health
+     ```
+  2. Change the password in `secrets/db_password` and run `./rotate.sh` to rotate the password.
+  3. Check backend health and uptime again (see step 1). The uptime should not decrease.
+- Automated pact-based checks: run `./node_modules/.bin/cross-env PG_DB_HOST=<PG_DB_HOST> PG_DB_PORT=<PG_DB_PORT> REDIS_URL=<REDIS_URL> PORT=<PORT> yarn run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
+  - `PORT`: 3000
+  - `PG_DB_HOST`: `localhost`
+  - `PG_DB_PORT`: 5432
+  - `REDIS_URL`: `redis://localhost:6379`
 - List pagination check:
-  * Make the first request for conversions:
+  1. Make the first request for users:
     ```shell
     curl -H "Content-Type: application/json" http://localhost:3000/users
     ```
-  * Check the transition between pages:
+  2. Check the transition between pages:
     ```shell
     curl -H "Content-Type: application/json" 'http://localhost:3000/users?cursor=MTA%3D'
     ```
     `MTA%3D` is URI encoded value of the previous cursor. The last user from the previous request has id 10, and the first one from this one has id 11, so pages do not overlap or skip records.
-  * Check the last page with another page size:
+  3. Check the last page with another page size:
     ```shell
     curl -H "Content-Type: application/json" 'http://localhost:3000/users?cursor=MjY2&limit=20'
     ```
@@ -43,16 +67,24 @@ After you see `Server is running on port 3000`, you will be able to do the tests
   Expected response body (prettified):
   ```json
   {
-    "type": "http://localhost:3000/problems/400",
+    "type": "http://localhost:3000/problems/validation-failed",
     "title": "Bad Request",
     "status": 400,
-    "detail": "request/body must have required property 'username'",
-    "instance": "http://localhost:3000/users",
+    "detail": "The request is invalid",
+    "instance": "/users",
     "errors": [
       {
-        "path": "/body/username",
-        "message": "must have required property 'username'",
-        "errorCode": "required.openapi.validation"
+        "field": "username",
+        "rules": [
+          "username must match ^[a-zA-Z0-9_]+$ regular expression","username must be shorter than or equal to 32 characters","username must be longer than or equal to 3 characters","username must be a string"
+        ]
+      },
+      {
+        "field": "email",
+        "rules": [
+          "email must be shorter than or equal to 254 characters",
+          "email must be an email"
+        ]
       }
     ]
   }
@@ -68,15 +100,9 @@ After you see `Server is running on port 3000`, you will be able to do the tests
     "type": "http://localhost:3000/problems/400",
     "title": "Bad Request",
     "status": 400,
-    "detail": "request/headers must have required property 'idempotency-key'",
-    "instance": "http://localhost:3000/users",
-    "errors": [
-      {
-        "path": "/headers/idempotency-key",
-        "message": "must have required property 'idempotency-key'",
-        "errorCode": "required.openapi.validation"
-      }
-    ]
+    "detail": "The request is invalid",
+    "instance": "/users",
+    "errors": [{"field":"idempotency-key","rules":["Idempotency-Key header is required"]}]
   }
   ```
   `HTTP/1.1 400 Bad Request` line in the output for this command too.

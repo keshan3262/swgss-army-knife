@@ -106,8 +106,10 @@
             "detail": "The request is invalid",
             "errors": [
               {
-                "in": "id",
-                "message": "Value must be a integer within the interval [1, Infinity]"
+                "field": "id",
+                "rules": [
+                  "Value must be a integer within the interval [1, Infinity]"
+                ]
               }
             ],
             "instance": "/users/abc",
@@ -142,7 +144,7 @@
                 }
               ]
             },
-            "$.errors[*].message": {
+            "$.errors[*].rules": {
               "combine": "AND",
               "matchers": [
                 {

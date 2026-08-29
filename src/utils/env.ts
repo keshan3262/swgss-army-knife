@@ -1,17 +1,5 @@
 import { z } from 'zod';
-
-export const envSchema = z.object({
-  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-  BASE_URL: z.url({ protocol: /^http(s)?$/ }).optional(),
-  PG_DB_URL: z.url({ protocol: /^postgres$/ }),
-  REDIS_URL: z.url({ protocol: /^redis$/ })
-}).superRefine(
-  (data) => {
-    if (!data.BASE_URL) {
-      data.BASE_URL = `http://localhost:${data.PORT}`;
-    }
-  }
-);
+import { envSchema } from '../config/env.schema';
 
 export type Env = z.infer<typeof envSchema>;
 

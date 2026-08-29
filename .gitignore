@@ -21,3 +21,6 @@ logs/
 
 .vscode
 .env
+
+secrets/*
+init-pg.sql

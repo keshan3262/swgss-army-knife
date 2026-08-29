@@ -20,7 +20,7 @@ export interface ParseBoundedIntPipeOptions {
 @Injectable()
 export class ParseBoundedIntPipe implements PipeTransform {
   private readonly parseIntPipe: ParseIntPipe;
-  protected exceptionFactory: (error: { in: string; message: string }) => any;
+  protected exceptionFactory: (error: { field: string; rules: string[] }) => any;
 
   constructor(@Optional() protected readonly options?: ParseBoundedIntPipeOptions) {
     this.parseIntPipe = new ParseIntPipe(options);
@@ -51,8 +51,8 @@ export class ParseBoundedIntPipe implements PipeTransform {
       return parsedValue;
     } catch {
       throw this.exceptionFactory({
-        in: metadata.data ?? metadata.type,
-        message: `Value must be a integer within the interval [${min}, ${max}]`
+        field: metadata.data ?? metadata.type,
+        rules: [`Value must be a integer within the interval [${min}, ${max}]`]
       });
     }
   }

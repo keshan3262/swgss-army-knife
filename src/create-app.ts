@@ -5,6 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { Env } from './utils/env';
 import { ProblemFilter } from './utils/problem.filter';
+import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
+import { RedisDb } from './utils/dbs';
 
 function validationFactory(errors: ValidationError[]) {
   return new BadRequestException({
@@ -24,6 +26,7 @@ export async function createApp(options?: NestApplicationOptions) {
   const config = app.get(ConfigService<Env, true>);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, exceptionFactory: validationFactory }));
   app.useGlobalFilters(new ProblemFilter(config));
+  app.useGlobalInterceptors(new IdempotencyInterceptor(new RedisDb(config)));
   const openapiConfig = new DocumentBuilder()
     .setTitle('swgss-army-knife')
     .setDescription('Image conversion and compression API')
