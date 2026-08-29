@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnApplicationShutdown } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { validate } from './utils/env';
@@ -16,6 +16,18 @@ import { PostgresPool, RedisDb } from './utils/dbs';
     }),
   ],
   controllers: [HealthController, UsersController, ConversionsController],
-  providers: [RedisDb, PostgresPool]
+  providers: [RedisDb, PostgresPool],
 })
-export class AppModule {}
+export class AppModule implements OnApplicationShutdown {
+  constructor(
+    private readonly redisDb: RedisDb,
+    private readonly postgresPool: PostgresPool,
+  ) {}
+
+  async onApplicationShutdown() {
+    await Promise.all([
+      this.redisDb.client.isOpen ? this.redisDb.client.close() : undefined,
+      this.postgresPool.pool.end(),
+    ]);
+  }
+}

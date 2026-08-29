@@ -26,7 +26,7 @@ export async function createApp(options?: NestApplicationOptions) {
   const config = app.get(ConfigService<Env, true>);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, exceptionFactory: validationFactory }));
   app.useGlobalFilters(new ProblemFilter(config));
-  app.useGlobalInterceptors(new IdempotencyInterceptor(new RedisDb(config)));
+  app.useGlobalInterceptors(new IdempotencyInterceptor(app.get(RedisDb)));
   const openapiConfig = new DocumentBuilder()
     .setTitle('swgss-army-knife')
     .setDescription('Image conversion and compression API')
