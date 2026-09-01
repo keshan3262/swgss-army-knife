@@ -17,20 +17,23 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
   ```
 - Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env` or `yarn run check:env`.
 
-Before starting the local version of backend, set up these environment variables in `.env`:
+Before starting the local version of backend (without Docker containers), set up these environment variables in `.env`:
 - `PORT`: the number of the port where the backend will listen.
 - `BASE_URL`: the base URL for backend, default is `http://localhost:<PORT>`.
 - `PG_DB_HOST`: the hostname of PostgreSQL database.
 - `PG_DB_PORT`: the port number for PostgreSQL database.
 - `REDIS_URL`: the complete URL for Redis DB.
-Also set the password for PostgreSQL database in `secrets/db_password` file unless you want to do with the default password (`app-v1-password`) and you are going to start the server with Docker containers. Anyway, you will be able to rotate it later.
+Also set the password for PostgreSQL database in `secrets/db_password` if you are going to start the backend without Docker containers.
 
-Before running requests tests, start the server. There are two options:
-- `npm start` or `yarn start`: make sure you have:
-  * Redis and PostgreSQL already launched with the specified credentials.
-  * `app_user` user in the PostgreSQL DB with the specified password.
-  * `secrets/db_password` file with the matching password.
-- `./up.sh`: before starting the backend, Docker containers for DBs will be set up. Don't use it if there is a local Redis server listening on port 20000 or PostgreSQL server listening on port 20001.
+Before running requests tests, build and start the server. There are two options:
+- Without Docker containers. Do the following steps:
+  1. Start Redis and PostgreSQL DBs unless they have been started yet.
+  2. Create `app_user` user in PostgreSQL DB with a password if it is not there yet, using PostgreSQL command `CREATE ROLE app_user WITH LOGIN PASSWORD '<YOUR_PASSWORD>';`.
+  3. Set password for this user if this user has been before, but without a password, using PostgreSQL command `ALTER ROLE app_user WITH PASSWORD '<YOUR_PASSWORD>';`
+  4. Create `secrets/db_password` file with the password for this user.
+  5. Build the backend with `npm run build` or `yarn run build` command.
+  6. Start the backend with `npm run start` or `yarn run start` command.
+- With Docker containers. Just run `./up.sh`. Before starting the backend, Docker containers for DBs will be set up. Don't use it if there is a local Redis server listening on port 20000 or PostgreSQL server listening on port 20001.
 After you see `Server is running on port <PORT>` (in a terminal or a container console), you will be able to do the tests below.
 
 - Healthcheck and password rotation:
