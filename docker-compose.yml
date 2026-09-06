@@ -1,6 +1,6 @@
-name: hw-11
+name: hw-12
 services:
-  hw-11:
+  hw-12:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,8 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
-      - PG_DB_HOST=postgres
-      - PG_DB_PORT=5432
+      - DB_URL=postgresql://app_user@postgres:5432/swgss-army-knife
     volumes:
       - ./secrets/db_password:/usr/src/app/secrets/db_password
     depends_on:

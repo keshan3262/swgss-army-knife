@@ -175,8 +175,7 @@ describe('GET /users/:id', () => {
 
     beforeAll(async () => {
       process.env.PORT ??= '3000';
-      process.env.PG_DB_HOST ??= 'localhost';
-      process.env.PG_DB_PORT ??= '5432';
+      process.env.DB_URL ??= 'postgresql://app_user@localhost:5432/swgss-army-knife';
       process.env.REDIS_URL ??= 'redis://localhost:6379';
       app = await createApp({ logger: false });
       await app.listen(0, '127.0.0.1');

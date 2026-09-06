@@ -28,10 +28,7 @@ export class PostgresPool {
 
   constructor(config: ConfigService<Env, true>) {
     this.pool = new Pool({
-      host: config.get('PG_DB_HOST'),
-      port: config.get('PG_DB_PORT', { infer: true }),
-      user: 'app_user',
-      database: 'swgss-army-knife',
+      connectionString: config.get('DB_URL'),
       password: async () => (await readFile(SECRET_FILE, 'utf-8')).trim(),
       max: 3
     });

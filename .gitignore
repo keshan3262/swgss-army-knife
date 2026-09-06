@@ -23,4 +23,5 @@ logs/
 .env
 
 secrets/*
+!secrets/*.example
 init-pg.sql
