@@ -28,10 +28,11 @@ export class PostgresPool {
   public readonly pool: Pool;
 
   constructor(config: ConfigService<Env, true>) {
-    const [, user, , host, port] = dbUrlRegex.exec(config.get('DB_URL'))!;
+    const [, user, , host, port, database] = dbUrlRegex.exec(config.get('DB_URL'))!;
     this.pool = new Pool({
       user,
       host,
+      database,
       port: parseInt(port),
       password: async () => (await readFile(SECRET_FILE, 'utf-8')).trim(),
       max: 3
