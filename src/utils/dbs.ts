@@ -37,7 +37,7 @@ export class PostgresPool {
     });
 
     this.pool.on('error', (err) => {
-      console.error('PG pool error', err);
+      console.error('PG pool error', err.message);
     });
   }
 }

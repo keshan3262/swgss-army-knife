@@ -41,7 +41,7 @@ After you see `Server is running on port <PORT>` (in a terminal or a container c
      ```shell
      curl -H "Content-Type: application/json" http://localhost:3000/health
      ```
-  2. Change the password in `secrets/db_password` and run `./rotate.sh` to rotate the password.
+  2. Run `./rotate.sh` to rotate the password.
   3. Check backend health and uptime again (see step 1). The uptime should not decrease.
 - Automated pact-based checks: run `./node_modules/.bin/cross-env PG_DB_HOST=<PG_DB_HOST> PG_DB_PORT=<PG_DB_PORT> REDIS_URL=<REDIS_URL> PORT=<PORT> yarn run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
   - `PORT`: 3000
