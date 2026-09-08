@@ -215,6 +215,12 @@ paths:
                       $ref: '#/components/schemas/Conversion'
                   next_cursor:
                     $ref: '#/components/schemas/CursorToken'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
         '401':
           description: Unauthorized
           content:

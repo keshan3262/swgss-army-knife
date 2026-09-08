@@ -17,3 +17,10 @@ node_modules
 .pnp.*
 
 dist/
+logs/
+
+.vscode
+.env
+
+secrets/*
+init-pg.sql

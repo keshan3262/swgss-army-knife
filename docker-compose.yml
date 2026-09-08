@@ -1,6 +1,6 @@
-name: hw-09
+name: hw-11
 services:
-  hw-09:
+  hw-11:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,15 +9,38 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
+      - PG_DB_HOST=postgres
+      - PG_DB_PORT=5432
+    volumes:
+      - ./secrets/db_password:/usr/src/app/secrets/db_password
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
+  postgres:
+    image: postgres:17
+    ports:
+      - 20001:5432
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin-bootstrap-only
+      POSTGRES_DB: swgss-army-knife
+    volumes:
+      - ./init-pg.sql:/docker-entrypoint-initdb.d/init-pg.sql
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "swgss-army-knife"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
   redis:
     image: redis:8.10.1
     volumes:
       - redis_data:/data
     ports:
-      - 6379:6379
+      - 20000:6379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -27,3 +50,4 @@ services:
 
 volumes:
   redis_data:
+  pg_data:

@@ -3,14 +3,13 @@ WORKDIR /usr/src/app
 COPY package.json yarn.lock .yarnrc.yml ./
 RUN corepack enable && yarn --immutable
 COPY . .
-RUN yarn run build
+RUN yarn run build && yarn workspaces focus --all --production
 
 FROM node:24-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
-COPY --from=builder /usr/src/app/package.json /usr/src/app/yarn.lock /usr/src/app/.yarnrc.yml ./
-COPY --from=builder /usr/src/app/openapi/openapi.yaml ./openapi/openapi.yaml
-RUN corepack enable && yarn --immutable
+COPY --from=builder /usr/src/app/package.json /usr/src/app/.env.example ./
+COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
 USER node
 EXPOSE 3000
