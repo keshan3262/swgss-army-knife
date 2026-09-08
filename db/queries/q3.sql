@@ -5,6 +5,7 @@ SELECT
   si.size as original_size,
   c.destination_format as output_format,
   c.status as status,
-  c.created_at as started_at
-FROM converted_versions cv RIGHT JOIN source_images si ON cv.source_image_id = si.id JOIN conversions c ON si.conversion_id = c.id JOIN users u ON c.user_id = u.id
+  c.created_at as started_at,
+  c.user_id as user_id
+FROM converted_versions cv RIGHT JOIN source_images si ON cv.source_image_id = si.id JOIN conversions c ON si.conversion_id = c.id
 WHERE c.id = 1234;

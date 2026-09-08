@@ -12,7 +12,7 @@ You can run database schemas without installing node modules or starting the bac
 5. Fill all tables: `psql -f db/seed.sql`. The main table is `conversions`, so check the filling with command `psql -Atc "SELECT count(*) FROM conversions"`.
 6. Check the tables performance before adding indexes: `psql -c "EXPLAIN (ANALYZE, BUFFERS) $(cat db/queries/q1.sql)"`, `psql -c "EXPLAIN (ANALYZE, BUFFERS) $(cat db/queries/q2.sql)"`, `psql -c "EXPLAIN (ANALYZE, BUFFERS) $(cat db/queries/q3.sql)"`. The output should be like in `db/OPTIMIZATIONS.md`.
 7. Set up indexes: `psql -f db/indexes.sql`, `psql -c "ANALYZE;"`.
-8. Check the tables performance again with commands from point 7. The output should be like in `db/OPTIMIZATIONS.md`. There is still a `Seq Scan` for `users` table but it is caused by a small number of users. It is hard to make up enough first names and last names to guarantee large enough set of users.
+8. Check the tables performance again with commands from point 7. The output should be like in `db/OPTIMIZATIONS.md`. There should be no more `Seq Scan` entries.
 
 Install node modules using `npm install` or `yarn`. After that, you will be able to run the linting tests below.
 - Specs validation: `npx @redocly/cli lint openapi/openapi.yaml`.
@@ -30,7 +30,7 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
 Before starting the local version of backend (without Docker containers), set up these environment variables in `.env`:
 - `PORT`: the number of the port where the backend will listen.
 - `BASE_URL`: the base URL for backend, default is `http://localhost:<PORT>`.
-- `DB_URL`: connection string for the PostgreSQL database without password.
+- `DB_URL`: connection string for the PostgreSQL database (password is optional, it will be overriden with `secrets/db_password`, see below).
 - `REDIS_URL`: the complete URL for Redis DB.
 Also set the password for PostgreSQL database in `secrets/db_password` if you are going to start the backend without Docker containers.
 
@@ -50,7 +50,7 @@ After you see `Server is running on port <PORT>` (in a terminal or a container c
      ```shell
      curl -H "Content-Type: application/json" http://localhost:3000/health
      ```
-  2. Run `./rotate.sh` to rotate the password.
+  2. To rotate the password if the app is started using Docker containers, run `./rotate.sh`. Otherwise, execute commands locally and in the database like in `rotate.sh`.
   3. Check backend health and uptime again (see step 1). The uptime should not decrease.
 - Automated pact-based checks: run `./node_modules/.bin/cross-env DB_URL=<DB_URL> REDIS_URL=<REDIS_URL> PORT=<PORT> yarn run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
   - `PORT`: 3000

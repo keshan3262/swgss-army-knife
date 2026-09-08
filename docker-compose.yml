@@ -9,7 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
-      - DB_URL=postgresql://app_user@postgres:5432/swgss-army-knife
+      - DB_URL=postgresql://app_user:foo@postgres:5432/swgss-army-knife
     volumes:
       - ./secrets/db_password:/usr/src/app/secrets/db_password
     depends_on:

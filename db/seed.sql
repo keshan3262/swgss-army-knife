@@ -1,13 +1,14 @@
 INSERT INTO users (email, username)
-  SELECT lower(first_name) || '.' || lower(last_name) || '@example.com' as email,
-         lower(first_name) || '_' || lower(last_name) as username
+  SELECT lower(first_name) || '.' || lower(last_name) || n.n::text || '@example.com' as email,
+         lower(first_name) || '_' || lower(last_name) || n.n::text as username
   FROM UNNEST(ARRAY[
     'Alice', 'Bob', 'Charlie', 'Dave', 'Eve', 'Frank', 'Grace', 'Heidi', 'Ivy', 'Jack', 'Kyle', 'Liam', 'Mia', 'Noah',
     'Olivia', 'Paul', 'Quinn', 'Ryan', 'Sarah', 'Terry', 'Uma', 'Violet', 'William', 'Xavier', 'Yvonne', 'Zach'
   ]) as first_name
   CROSS JOIN UNNEST(ARRAY[
     'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez'
-  ]) as last_name;
+  ]) as last_name
+  CROSS JOIN (SELECT n FROM GENERATE_SERIES(1, 100) as n) as n;
 
 INSERT INTO conversions (user_id, destination_format, status, created_at)
   SELECT
@@ -19,9 +20,10 @@ INSERT INTO conversions (user_id, destination_format, status, created_at)
     now() - (random() * INTERVAL '365 days')
   FROM (
     SELECT
-      (SELECT floor(user_rnd * (MAX(id) - MIN(id)) + MIN(id)) FROM users) as user_id,
+      floor(user_rnd * (u.max_id - u.min_id) + u.min_id) as user_id,
       random() as status_rnd
     FROM (SELECT random() as user_rnd FROM GENERATE_SERIES(1, 100000))
+    CROSS JOIN (SELECT MIN(id) as min_id, MAX(id) as max_id FROM users) as u
   ) as x;
 
 INSERT INTO source_images (conversion_id, format, original_name, size, storage_url, conversion_error)
