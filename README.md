@@ -2,6 +2,18 @@
 
 This is a prototype not of Marketplace API, but of API for compressing and converting images.
 
+## Configuration
+
+Configure these variables before running or testing. To configure environment variables, create and edit `.env` file (if going without Docker containers from `docker-compose.yml`) or `environment` section of `hw-12` container in `docker-compose.yml` (otherwise):
+
+| Meaning  | Default value (if none, the variable is required) | Source |
+| -------- | ------------------------------------------------- | ------ |
+| The number of the port where the backend will listen | 3000 | Environment variable `PORT` |
+| The base URL for backend | `http://localhost:<PORT>` | Environment variable `BASE_URL` |
+| Connection string for the PostgreSQL database (password is optional, it will be overriden with `secrets/db_password`) | | Environment variable `DB_URL` |
+| Connection string for Redis DB | | Environment variable `REDIS_URL` |
+| Password for PostgreSQL database | If going with Docker containers from `docker-compose.yml`, a password will be generated for you; otherwise, it is required | Secrets storage: file `secrets/db_password` |
+
 ## Testing
 
 You can run database schemas without installing node modules or starting the backend. Do the following steps:
@@ -26,13 +38,6 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
   console.log('Idempotency-Key: required =',idem?.required,'· опис, символів =',(idem?.description??'').trim().length)"
   ```
 - Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env` or `yarn run check:env`.
-
-Before starting the local version of backend (without Docker containers), set up these environment variables in `.env`:
-- `PORT`: the number of the port where the backend will listen.
-- `BASE_URL`: the base URL for backend, default is `http://localhost:<PORT>`.
-- `DB_URL`: connection string for the PostgreSQL database (password is optional, it will be overriden with `secrets/db_password`, see below).
-- `REDIS_URL`: the complete URL for Redis DB.
-Also set the password for PostgreSQL database in `secrets/db_password` if you are going to start the backend without Docker containers.
 
 Before running requests tests, build and start the server. There are two options:
 - Without Docker containers. Do the following steps:
