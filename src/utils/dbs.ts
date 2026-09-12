@@ -4,8 +4,8 @@ import { createClient } from 'redis';
 import { Env } from './env';
 import { Pool } from 'pg';
 import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { dbUrlRegex } from '../config/env.schema';
+import { SECRET_FILE } from '../config/constants';
 
 @Injectable()
 export class RedisDb {
@@ -20,8 +20,6 @@ export class RedisDb {
     await this.client.connect();
   }
 }
-
-const SECRET_FILE = path.join(__dirname, '..', '..', 'secrets', 'db_password');
 
 @Injectable()
 export class PostgresPool {

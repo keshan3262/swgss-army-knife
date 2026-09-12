@@ -9,7 +9,14 @@
     "clean": "rimraf dist/",
     "test": "cross-env PACT_OVERWRITE=0 jest --runInBand",
     "test:update-pacts": "jest --runInBand",
-    "check:env": "node scripts/check-env.js"
+    "check:env": "node scripts/check-env.js",
+    "migration:generate": "bash scripts/with-secrets.sh typeorm migration:generate -d dist/data-source.js src/migrations/init",
+    "migrate": "bash scripts/with-secrets.sh typeorm migration:run -d dist/data-source.js",
+    "migrate:show": "bash scripts/with-secrets.sh typeorm migration:show -d dist/data-source.js",
+    "migrate:revert": "bash scripts/with-secrets.sh typeorm migration:revert -d dist/data-source.js",
+    "demo:nplus1": "bash scripts/with-secrets.sh node dist/demo-nplus1.js",
+    "report": "bash scripts/with-secrets.sh node dist/report.js",
+    "seed": "bash scripts/with-secrets.sh node dist/seed.js"
   },
   "devDependencies": {
     "@pact-foundation/pact": "^17.1.2",
@@ -40,6 +47,8 @@
     "redis": "^6.2.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "typeorm": "0.3.31",
+    "typeorm-naming-strategies": "^4.1.0",
     "zod": "^4.4.3"
   }
 }
