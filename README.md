@@ -141,6 +141,18 @@ After you see `Server is running on port <PORT>` (in a terminal or a container c
 
 ## Grading
 
+Start docker containers with command `docker compose up -d --wait`. Then set environment variables to avoid errors about missing secrets: `export SKIP_VAULT=1 && export DB_URL=postgresql://admin:admin-bootstrap-only@localhost:20001/swgss-army-knife`.
+
+After each run of `seed` script, expect to see the same amount of all entities, see commands and their output below.
+
+```
+
+```
+
+After running `demo:nplus1` scripts, expect to see 2 SQL queries for requests in a loop ("N+1") and 1 request after a fix ("with relations").
+
+For TypeORM requests, `Repository` will be used whenever it possible to do an operation with one request without aggregating results using TypeScript code or fetching much more data than necessary, like getting an amount of related entities for each "parent" entity or getting an entity with its relations. Otherwise, a `QueryBuilder` will be used.
+
 ## Architectural decisions record
 
 ### What is it
