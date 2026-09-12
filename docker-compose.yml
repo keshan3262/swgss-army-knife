@@ -1,6 +1,6 @@
-name: hw-12
+name: hw-13
 services:
-  hw-12:
+  hw-13:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,9 +9,8 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
-      - DB_URL=postgresql://app_user:foo@postgres:5432/swgss-army-knife
-    volumes:
-      - ./secrets/db_password:/usr/src/app/secrets/db_password
+      - DB_URL=${DB_URL:-postgresql://admin:admin-bootstrap-only@postgres:5432/swgss-army-knife}
+      - SKIP_VAULT=1
     depends_on:
       redis:
         condition: service_healthy
@@ -26,8 +25,8 @@ services:
       POSTGRES_PASSWORD: admin-bootstrap-only
       POSTGRES_DB: swgss-army-knife
     volumes:
-      - ./init-pg.sql:/docker-entrypoint-initdb.d/init-pg.sql
       - pg_data:/var/lib/postgresql/data
+      - ./init-pg.sql:/docker-entrypoint-initdb.d/init-pg.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "admin", "-d", "swgss-army-knife"]
       interval: 5s

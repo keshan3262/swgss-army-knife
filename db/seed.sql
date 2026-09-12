@@ -20,7 +20,7 @@ INSERT INTO conversions (user_id, destination_format, status, created_at)
     now() - (random() * INTERVAL '365 days')
   FROM (
     SELECT
-      floor(user_rnd * (u.max_id - u.min_id) + u.min_id) as user_id,
+      floor(user_rnd * (u.max_id - u.min_id + 1) + u.min_id) as user_id,
       random() as status_rnd
     FROM (SELECT random() as user_rnd FROM GENERATE_SERIES(1, 100000))
     CROSS JOIN (SELECT MIN(id) as min_id, MAX(id) as max_id FROM users) as u

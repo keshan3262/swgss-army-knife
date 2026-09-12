@@ -4,20 +4,22 @@ This is a prototype not of Marketplace API, but of API for compressing and conve
 
 ## Configuration
 
-Configure these variables before running or testing. To configure environment variables, create and edit `.env` file (if going without Docker containers from `docker-compose.yml`) or `environment` section of `hw-12` container in `docker-compose.yml` (otherwise):
+Configure these variables before running or testing. To configure non-exported environment variables, create and edit `.env` file (if going without Docker containers from `docker-compose.yml`) or `environment` section of `hw-13` container in `docker-compose.yml` (otherwise):
 
 | Meaning  | Default value (if none, the variable is required) | Source |
 | -------- | ------------------------------------------------- | ------ |
 | The number of the port where the backend will listen | 3000 | Environment variable `PORT` |
 | The base URL for backend | `http://localhost:<PORT>` | Environment variable `BASE_URL` |
-| Connection string for the PostgreSQL database (password is optional, it will be overriden with `secrets/db_password`) | | Environment variable `DB_URL` |
 | Connection string for Redis DB | | Environment variable `REDIS_URL` |
-| Password for PostgreSQL database | If going with Docker containers from `docker-compose.yml`, a password will be generated for you; otherwise, it is required | Secrets storage: file `secrets/db_password` |
+| 0/1 flag for using exported environment variables instead of store files to get connection string | 0 | Exported environment variable `SKIP_VAULT` |
+| Connection string for the PostgreSQL database | If going with startup script `up.sh`, it will be generated for you automatically. If going to run `docker-compose` another way, it is `postgresql://admin:admin-bootstrap-only@localhost:20001` | `DB_URL` exported environment variable if `SKIP_VAULT=1`. `secrets/db-url` store file otherwise |
 
 ## Testing
 
-You can run database schemas without installing node modules or starting the backend. Do the following steps:
-1. Start the container with PostgreSQL database using command `echo "SELECT 1;" > init-pg.sql && docker compose up -d postgres --wait --force-recreate`. It will start listening on port 20001, so if you have another process listening on it, kill it.
+### Database schemas
+
+You can run database schemas with a large set of rows, not installing node modules or starting the backend. Do the following steps:
+1. Start the container with PostgreSQL database using command `docker compose up -d postgres --wait --force-recreate`. It will start listening on port 20001, so if you have another process listening on it, kill it.
 2. Set connection parameters in environment variables: `export PGUSER=admin PGHOST=localhost PGPORT=20001 PGDATABASE=swgss-army-knife PGPASSWORD=admin-bootstrap-only`. The password is already in `docker-compose.yml`, so there is no secrets leak. Without setting them, you have to add a connection string `postgresql://admin:admin-bootstrap-only@localhost:20001/swgss-army-knife` for each `psql` command before other parameters.
 3. Check the connection to the database: `psql`. You should see psql shell.
 4. Exit the shell with `\q` command and setup schemas with command `psql -f db/schema.sql`.
@@ -26,7 +28,9 @@ You can run database schemas without installing node modules or starting the bac
 7. Set up indexes: `psql -f db/indexes.sql`, `psql -c "ANALYZE;"`.
 8. Check the tables performance again with commands from point 7. The output should be like in `db/OPTIMIZATIONS.md`. There should be no more `Seq Scan` entries.
 
-Install node modules using `npm install` or `yarn`. After that, you will be able to run the linting tests below.
+### Linting
+
+Install node modules using `npm install`. After that, you will be able to run the tests below.
 - Specs validation: `npx @redocly/cli lint openapi/openapi.yaml`.
 - Specs volume validation:
   ```shell
@@ -37,27 +41,20 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
   console.log('операцій:',ops.length,'· ресурсів:',new Set(Object.keys(s.paths).map(p=>p.split('/')[1])).size);\
   console.log('Idempotency-Key: required =',idem?.required,'· опис, символів =',(idem?.description??'').trim().length)"
   ```
-- Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env` or `yarn run check:env`.
+- Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env`.
 
-Before running requests tests, build and start the server. There are two options:
+### Requests tests
+
+Before running them, install node modules with `npm install`, build the server, and start it. There are two options:
 - Without Docker containers. Do the following steps:
   1. Start Redis and PostgreSQL DBs unless they have been started yet.
-  2. Create `app_user` user in PostgreSQL DB with a password if it is not there yet, using PostgreSQL command `CREATE ROLE app_user WITH LOGIN PASSWORD '<YOUR_PASSWORD>';`.
-  3. Set password for this user if this user has been before, but without a password, using PostgreSQL command `ALTER ROLE app_user WITH PASSWORD '<YOUR_PASSWORD>';`
-  4. Create `secrets/db_password` file with the password for this user.
-  5. Build the backend with `npm run build` or `yarn run build` command.
-  6. Start the backend with `npm run start` or `yarn run start` command.
+  2. Make sure that the configuration is proper.
+  3. Build the backend with `npm run build` command.
+  4. Start the backend with `npm run start` command.
 - With Docker containers. Just run `./up.sh`. Before starting the backend, Docker containers for DBs will be set up. Don't use it if there is a local Redis server listening on port 20000 or PostgreSQL server listening on port 20001.
 After you see `Server is running on port <PORT>` (in a terminal or a container console), you will be able to do the tests below.
 
-- Healthcheck and password rotation:
-  1. Check backend health and uptime:
-     ```shell
-     curl -H "Content-Type: application/json" http://localhost:3000/health
-     ```
-  2. To rotate the password if the app is started using Docker containers, run `./rotate.sh`. Otherwise, execute commands locally and in the database like in `rotate.sh`.
-  3. Check backend health and uptime again (see step 1). The uptime should not decrease.
-- Automated pact-based checks: run `./node_modules/.bin/cross-env DB_URL=<DB_URL> REDIS_URL=<REDIS_URL> PORT=<PORT> yarn run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
+- Automated pact-based checks: run `./node_modules/.bin/cross-env DB_URL=<DB_URL> REDIS_URL=<REDIS_URL> PORT=<PORT> npm run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
   - `PORT`: 3000
   - `DB_URL`: `postgresql://app_user@localhost:5432/swgss-army-knife`
   - `REDIS_URL`: `redis://localhost:6379`
@@ -142,6 +139,44 @@ After you see `Server is running on port <PORT>` (in a terminal or a container c
     curl -H "Content-Type: application/json" -H "Idempotency-Key: foo2" -v http://localhost:3000/users -d '{"username":"arthurweasley","email":"a.weasley@gmail.com"}'
     ```
 
+## Grading
+
+Start docker containers with command `docker compose up -d --wait`. Then set environment variables to avoid errors about missing secrets: `export SKIP_VAULT=1 && export DB_URL=postgresql://admin:admin-bootstrap-only@localhost:20001/swgss-army-knife`.
+
+Before running scripts, install node modules (`npm install`) and build the project (`npm run build`).
+
+After each run of `seed` script, expect to see the same amount of all entities, see an example of terminal input/output, which contains commands and the expected output, below.
+
+```
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM users;"
+ count 
+-------
+     5
+(1 row)
+
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM conversions;"
+ count 
+-------
+     5
+(1 row)
+
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM source_images;"
+ count 
+-------
+    11
+(1 row)
+
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM converted_versions;"
+ count 
+-------
+     5
+(1 row)
+```
+
+After running `demo:nplus1` scripts, expect to see 2 SQL queries for requests in a loop ("N+1") and 1 request after a fix ("with relations").
+
+For TypeORM requests, `Repository` will be used whenever it possible to do an operation with one request without aggregating results using TypeScript code or fetching much more data than necessary, like getting an amount of related entities for each "parent" entity or getting an entity with its relations. Otherwise, a `QueryBuilder` will be used.
+
 ## Architectural decisions record
 
 ### What is it
@@ -180,3 +215,7 @@ This is a service that joins various tools for compressing and converting images
 
 1. Not going to implement conversion from raster images to SVG, even if an input image is "obviously" a drawing. Embedding the image into SVG makes no sense, but true vectorizing requires to develop a solution based on neural networks, which requires plenty of efforts and will be expensive to maintain.
 2. Not going to implement Node.js bindings for modern versions of `oxipng` and `resvg`, although it enables switching to AWS Lambdas. It either requires a separate research or a permission to use AI.
+
+### Updates
+
+1. It is better to have four entities in the DB: user, conversion, input image, and output image, then the coherence will be easier to maintain.
