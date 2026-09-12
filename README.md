@@ -2,7 +2,29 @@
 
 This is a prototype not of Marketplace API, but of API for compressing and converting images.
 
+## Configuration
+
+Configure these variables before running or testing. To configure environment variables, create and edit `.env` file (if going without Docker containers from `docker-compose.yml`) or `environment` section of `hw-12` container in `docker-compose.yml` (otherwise):
+
+| Meaning  | Default value (if none, the variable is required) | Source |
+| -------- | ------------------------------------------------- | ------ |
+| The number of the port where the backend will listen | 3000 | Environment variable `PORT` |
+| The base URL for backend | `http://localhost:<PORT>` | Environment variable `BASE_URL` |
+| Connection string for the PostgreSQL database (password is optional, it will be overriden with `secrets/db_password`) | | Environment variable `DB_URL` |
+| Connection string for Redis DB | | Environment variable `REDIS_URL` |
+| Password for PostgreSQL database | If going with Docker containers from `docker-compose.yml`, a password will be generated for you; otherwise, it is required | Secrets storage: file `secrets/db_password` |
+
 ## Testing
+
+You can run database schemas without installing node modules or starting the backend. Do the following steps:
+1. Start the container with PostgreSQL database using command `echo "SELECT 1;" > init-pg.sql && docker compose up -d postgres --wait --force-recreate`. It will start listening on port 20001, so if you have another process listening on it, kill it.
+2. Set connection parameters in environment variables: `export PGUSER=admin PGHOST=localhost PGPORT=20001 PGDATABASE=swgss-army-knife PGPASSWORD=admin-bootstrap-only`. The password is already in `docker-compose.yml`, so there is no secrets leak. Without setting them, you have to add a connection string `postgresql://admin:admin-bootstrap-only@localhost:20001/swgss-army-knife` for each `psql` command before other parameters.
+3. Check the connection to the database: `psql`. You should see psql shell.
+4. Exit the shell with `\q` command and setup schemas with command `psql -f db/schema.sql`.
+5. Fill all tables: `psql -f db/seed.sql`. The main table is `conversions`, so check the filling with command `psql -Atc "SELECT count(*) FROM conversions"`.
+6. Check the tables performance before adding indexes: `psql -c "EXPLAIN (ANALYZE, BUFFERS) $(cat db/queries/q1.sql)"`, `psql -c "EXPLAIN (ANALYZE, BUFFERS) $(cat db/queries/q2.sql)"`, `psql -c "EXPLAIN (ANALYZE, BUFFERS) $(cat db/queries/q3.sql)"`. The output should be like in `db/OPTIMIZATIONS.md`.
+7. Set up indexes: `psql -f db/indexes.sql`, `psql -c "ANALYZE;"`.
+8. Check the tables performance again with commands from point 7. The output should be like in `db/OPTIMIZATIONS.md`. There should be no more `Seq Scan` entries.
 
 Install node modules using `npm install` or `yarn`. After that, you will be able to run the linting tests below.
 - Specs validation: `npx @redocly/cli lint openapi/openapi.yaml`.
@@ -16,14 +38,6 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
   console.log('Idempotency-Key: required =',idem?.required,'· опис, символів =',(idem?.description??'').trim().length)"
   ```
 - Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env` or `yarn run check:env`.
-
-Before starting the local version of backend (without Docker containers), set up these environment variables in `.env`:
-- `PORT`: the number of the port where the backend will listen.
-- `BASE_URL`: the base URL for backend, default is `http://localhost:<PORT>`.
-- `PG_DB_HOST`: the hostname of PostgreSQL database.
-- `PG_DB_PORT`: the port number for PostgreSQL database.
-- `REDIS_URL`: the complete URL for Redis DB.
-Also set the password for PostgreSQL database in `secrets/db_password` if you are going to start the backend without Docker containers.
 
 Before running requests tests, build and start the server. There are two options:
 - Without Docker containers. Do the following steps:
@@ -41,12 +55,11 @@ After you see `Server is running on port <PORT>` (in a terminal or a container c
      ```shell
      curl -H "Content-Type: application/json" http://localhost:3000/health
      ```
-  2. Run `./rotate.sh` to rotate the password.
+  2. To rotate the password if the app is started using Docker containers, run `./rotate.sh`. Otherwise, execute commands locally and in the database like in `rotate.sh`.
   3. Check backend health and uptime again (see step 1). The uptime should not decrease.
-- Automated pact-based checks: run `./node_modules/.bin/cross-env PG_DB_HOST=<PG_DB_HOST> PG_DB_PORT=<PG_DB_PORT> REDIS_URL=<REDIS_URL> PORT=<PORT> yarn run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
+- Automated pact-based checks: run `./node_modules/.bin/cross-env DB_URL=<DB_URL> REDIS_URL=<REDIS_URL> PORT=<PORT> yarn run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
   - `PORT`: 3000
-  - `PG_DB_HOST`: `localhost`
-  - `PG_DB_PORT`: 5432
+  - `DB_URL`: `postgresql://app_user@localhost:5432/swgss-army-knife`
   - `REDIS_URL`: `redis://localhost:6379`
 - List pagination check:
   1. Make the first request for users:

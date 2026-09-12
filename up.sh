@@ -17,6 +17,6 @@ END
 \$\$;"
 echo "${SQL_SCRIPT}" > init-pg.sql
 
-docker compose up -d --wait
+docker compose up -d --wait --force-recreate
 
 echo "Done"
