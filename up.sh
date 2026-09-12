@@ -3,7 +3,8 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
 DB_PASSWORD="app-$(openssl rand -hex 8)"
-[ -f ./secrets/db-url ] || printf "postgresql://app_user:${DB_PASSWORD}@localhost:20001/swgss-army-knife" > ./secrets/db-url
+export DB_URL="postgresql://app_user:${DB_PASSWORD}@postgres:5432/swgss-army-knife"
+[ -f ./secrets/db-url ] || printf "${DB_URL}" > ./secrets/db-url
 
 SQL_SCRIPT="DO \$\$
 BEGIN
