@@ -8,8 +8,8 @@ RUN npm run build
 FROM node:24-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
-COPY --from=builder /usr/src/app/package.json /usr/src/app/.env.example ./
-RUN npm ci --omit dev
+COPY --from=builder /usr/src/app/package.json /usr/src/app/package-lock.json /usr/src/app/.env.example ./
+RUN npm ci --omit=dev
 COPY --from=builder /usr/src/app/dist ./dist
 USER node
 EXPOSE 3000

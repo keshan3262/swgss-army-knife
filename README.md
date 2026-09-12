@@ -4,7 +4,7 @@ This is a prototype not of Marketplace API, but of API for compressing and conve
 
 ## Configuration
 
-Configure these variables before running or testing. To configure environment variables, create and edit `.env` file (if going without Docker containers from `docker-compose.yml`) or `environment` section of `hw-12` container in `docker-compose.yml` (otherwise):
+Configure these variables before running or testing. To configure environment variables, create and edit `.env` file (if going without Docker containers from `docker-compose.yml`) or `environment` section of `hw-13` container in `docker-compose.yml` (otherwise):
 
 | Meaning  | Default value (if none, the variable is required) | Source |
 | -------- | ------------------------------------------------- | ------ |

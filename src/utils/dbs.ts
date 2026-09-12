@@ -4,8 +4,6 @@ import { createClient } from 'redis';
 import { Env } from './env';
 import { Pool } from 'pg';
 import { readFile } from 'node:fs/promises';
-import { dbUrlRegex } from '../config/env.schema';
-import { SECRET_FILE } from '../config/constants';
 
 @Injectable()
 export class RedisDb {
@@ -26,13 +24,8 @@ export class PostgresPool {
   public readonly pool: Pool;
 
   constructor(config: ConfigService<Env, true>) {
-    const [, user, , host, port, database] = dbUrlRegex.exec(config.get('DB_URL'))!;
     this.pool = new Pool({
-      user,
-      host,
-      database,
-      port: parseInt(port),
-      password: async () => (await readFile(SECRET_FILE, 'utf-8')).trim(),
+      connectionString: config.get('DB_URL')!,
       max: 3
     });
 

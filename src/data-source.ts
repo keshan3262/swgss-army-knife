@@ -1,8 +1,6 @@
 import 'reflect-metadata';
 import { DataSource, AbstractLogger, LogMessage, LogLevel } from 'typeorm';
-import { dbUrlRegex } from './config/env.schema';
 import { readFile } from 'node:fs/promises';
-import { SECRET_FILE } from './config/constants';
 import { Conversion } from './entities/conversion';
 import { User } from './entities/user';
 import { SourceImage } from './entities/source-image';
@@ -38,14 +36,9 @@ export class QueryCountLogger extends AbstractLogger {
 
 export const logger = new QueryCountLogger(['query', 'schema']);
 
-const [, username, , host, port, database] = dbUrlRegex.exec(process.env.DB_URL!)!;
 export const dataSource = new DataSource({
   type: 'postgres',
-  username,
-  host,
-  port: parseInt(port),
-  database,
-  password: async () => (await readFile(SECRET_FILE, 'utf-8')).trim(),
+  url: process.env.DB_URL!,
   entities: [User, Conversion, SourceImage, ConvertedVersion],
   migrations: [path.join(__dirname, '../dist/migrations/*.js')],
   logger: logger,
