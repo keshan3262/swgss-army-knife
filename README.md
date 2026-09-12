@@ -143,10 +143,34 @@ After you see `Server is running on port <PORT>` (in a terminal or a container c
 
 Start docker containers with command `docker compose up -d --wait`. Then set environment variables to avoid errors about missing secrets: `export SKIP_VAULT=1 && export DB_URL=postgresql://admin:admin-bootstrap-only@localhost:20001/swgss-army-knife`.
 
-After each run of `seed` script, expect to see the same amount of all entities, see commands and their output below.
+Before running scripts, install node modules (`npm install`) and build the project (`npm run build`).
+
+After each run of `seed` script, expect to see the same amount of all entities, see an example of terminal input/output, which contains commands and the expected output, below.
 
 ```
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM users;"
+ count 
+-------
+     5
+(1 row)
 
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM conversions;"
+ count 
+-------
+     5
+(1 row)
+
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM source_images;"
+ count 
+-------
+    11
+(1 row)
+
+MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM converted_versions;"
+ count 
+-------
+     5
+(1 row)
 ```
 
 After running `demo:nplus1` scripts, expect to see 2 SQL queries for requests in a loop ("N+1") and 1 request after a fix ("with relations").
