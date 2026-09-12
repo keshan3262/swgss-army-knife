@@ -1,8 +1,8 @@
 {
   "name": "swgss-army-knife",
   "scripts": {
-    "start:dev": "cross-env NODE_ENV=development ts-node-dev --files --quiet src/index.ts",
-    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "start:dev": "bash scripts/with-secrets.sh cross-env NODE_ENV=development ts-node-dev --files --quiet src/index.ts",
+    "start": "bash scripts/with-secrets.sh cross-env NODE_ENV=production node dist/index.js",
     "build": "tsc --skipLibCheck",
     "ts": "tsc --pretty",
     "clean": "rimraf dist/",

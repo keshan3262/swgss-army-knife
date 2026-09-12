@@ -9,7 +9,13 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
-      - DB_URL=postgresql://admin:admin-bootstrap-only@postgres:5432/swgss-army-knife
+      - |
+        DB_URL=$(if [ "${SKIP_VAULT:-0}" = "1" ]; then
+          echo "${DB_URL:-postgresql://admin:admin-bootstrap-only@localhost:20001/swgss-army-knife}";
+        else
+          cat ./secrets/db-url;
+        fi)
+      - SKIP_VAULT=1
     depends_on:
       redis:
         condition: service_healthy
@@ -25,6 +31,7 @@ services:
       POSTGRES_DB: swgss-army-knife
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./init-pg.sql:/docker-entrypoint-initdb.d/init-pg.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "admin", "-d", "swgss-army-knife"]
       interval: 5s
