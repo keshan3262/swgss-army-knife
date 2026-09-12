@@ -26,7 +26,7 @@ You can run database schemas without installing node modules or starting the bac
 7. Set up indexes: `psql -f db/indexes.sql`, `psql -c "ANALYZE;"`.
 8. Check the tables performance again with commands from point 7. The output should be like in `db/OPTIMIZATIONS.md`. There should be no more `Seq Scan` entries.
 
-Install node modules using `npm install` or `yarn`. After that, you will be able to run the linting tests below.
+Install node modules using `npm install`. After that, you will be able to run the linting tests below.
 - Specs validation: `npx @redocly/cli lint openapi/openapi.yaml`.
 - Specs volume validation:
   ```shell
@@ -37,7 +37,7 @@ Install node modules using `npm install` or `yarn`. After that, you will be able
   console.log('операцій:',ops.length,'· ресурсів:',new Set(Object.keys(s.paths).map(p=>p.split('/')[1])).size);\
   console.log('Idempotency-Key: required =',idem?.required,'· опис, символів =',(idem?.description??'').trim().length)"
   ```
-- Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env` or `yarn run check:env`.
+- Checking that `.env.example` file is synchronized with environment variables validation schema: `npm run check:env`.
 
 Before running requests tests, build and start the server. There are two options:
 - Without Docker containers. Do the following steps:
@@ -45,8 +45,8 @@ Before running requests tests, build and start the server. There are two options
   2. Create `app_user` user in PostgreSQL DB with a password if it is not there yet, using PostgreSQL command `CREATE ROLE app_user WITH LOGIN PASSWORD '<YOUR_PASSWORD>';`.
   3. Set password for this user if this user has been before, but without a password, using PostgreSQL command `ALTER ROLE app_user WITH PASSWORD '<YOUR_PASSWORD>';`
   4. Create `secrets/db_password` file with the password for this user.
-  5. Build the backend with `npm run build` or `yarn run build` command.
-  6. Start the backend with `npm run start` or `yarn run start` command.
+  5. Build the backend with `npm run build` command.
+  6. Start the backend with `npm run start` command.
 - With Docker containers. Just run `./up.sh`. Before starting the backend, Docker containers for DBs will be set up. Don't use it if there is a local Redis server listening on port 20000 or PostgreSQL server listening on port 20001.
 After you see `Server is running on port <PORT>` (in a terminal or a container console), you will be able to do the tests below.
 
@@ -57,7 +57,7 @@ After you see `Server is running on port <PORT>` (in a terminal or a container c
      ```
   2. To rotate the password if the app is started using Docker containers, run `./rotate.sh`. Otherwise, execute commands locally and in the database like in `rotate.sh`.
   3. Check backend health and uptime again (see step 1). The uptime should not decrease.
-- Automated pact-based checks: run `./node_modules/.bin/cross-env DB_URL=<DB_URL> REDIS_URL=<REDIS_URL> PORT=<PORT> yarn run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
+- Automated pact-based checks: run `./node_modules/.bin/cross-env DB_URL=<DB_URL> REDIS_URL=<REDIS_URL> PORT=<PORT> npm run test`. `PORT` must be an arbitrary unoccupied port. The default values for env variables are given below, you may remove a variable in the command above if the default value is OK.
   - `PORT`: 3000
   - `DB_URL`: `postgresql://app_user@localhost:5432/swgss-army-knife`
   - `REDIS_URL`: `redis://localhost:6379`

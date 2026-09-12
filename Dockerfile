@@ -1,15 +1,15 @@
 FROM node:24-slim AS builder
 WORKDIR /usr/src/app
-COPY package.json yarn.lock .yarnrc.yml ./
-RUN corepack enable && yarn --immutable
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN yarn run build && yarn workspaces focus --all --production
+RUN npm run build
 
 FROM node:24-slim AS runner
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/package.json /usr/src/app/.env.example ./
-COPY --from=builder /usr/src/app/node_modules ./node_modules
+RUN npm ci --omit dev
 COPY --from=builder /usr/src/app/dist ./dist
 USER node
 EXPOSE 3000
