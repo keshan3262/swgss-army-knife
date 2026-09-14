@@ -14,7 +14,7 @@ withDataSourceInitialization(async ds => {
     .getRepository(Conversion)
     .createQueryBuilder('c')
     .select('c.status', 'status')
-    .addSelect('COUNT(c.status)', 'count')
+    .addSelect('COUNT(c.status)::integer', 'count')
     .where('c.created_at >= :startOfMonth', { startOfMonth })
     .groupBy('c.status')
     .getRawMany<{ count: number; status: ConversionStatus }>();

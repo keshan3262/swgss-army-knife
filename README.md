@@ -157,13 +157,13 @@ MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT
 MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM conversions;"
  count 
 -------
-     5
+     6
 (1 row)
 
 MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM source_images;"
  count 
 -------
-    11
+    12
 (1 row)
 
 MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM converted_versions;"
@@ -173,7 +173,7 @@ MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT
 (1 row)
 ```
 
-After running `demo:nplus1` scripts, expect to see 2 SQL queries for requests in a loop ("N+1") and 1 request after a fix ("with relations").
+After running `demo:nplus1` scripts, expect to see 3 SQL queries for requests in a loop ("N+1") and 1 request after a fix ("with relations").
 
 For TypeORM requests, `Repository` will be used whenever it possible to do an operation with one request without aggregating results using TypeScript code or fetching much more data than necessary, like getting an amount of related entities for each "parent" entity or getting an entity with its relations. Otherwise, a `QueryBuilder` will be used.
 
