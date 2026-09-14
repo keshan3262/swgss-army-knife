@@ -24,4 +24,3 @@ logs/
 
 secrets/*
 !secrets/*.example
-init-pg.sql
