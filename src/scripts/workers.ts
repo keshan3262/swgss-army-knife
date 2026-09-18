@@ -126,4 +126,8 @@ withDataSourceInitialization(async (ds) => {
   workerLoadStats.forEach(({ worker, n }) => {
     console.log(`${worker}: ${n} rows`);
   });
+
+  if (excessiveProcessedRowsCount > 0) {
+    throw new Error('Excessive processed rows');
+  }
 });

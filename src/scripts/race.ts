@@ -77,11 +77,12 @@ async function runAttempt(ds: typeof dataSource, attempt: Attempt, runId: string
 
     await runner.commitTransaction();
     return true;
-  } catch {
+  } catch (e) {
     if (runner.isTransactionActive) {
       await runner.rollbackTransaction();
     }
-    return false;
+    
+    throw e;
   } finally {
     if (!runner.isReleased) {
       await runner.release();
@@ -136,7 +137,7 @@ function createAttempts(users: User[], handlers: SupportedHandler[]) {
 withDataSourceInitialization(async (ds) => {
   await clearDb(ds);
   await seed(ds, false);
-  await ds.createQueryBuilder(User, 'user').update().set({ ptsLeft: 30 }).execute();
+  await ds.createQueryBuilder(User, 'user').update().set({ ptsLeft: 50 }).execute();
   await ds.createQueryBuilder(ConversionHandler, 'ch').update().set({ ptsLeft: 30 }).execute();
   const users = await ds.getRepository(User).find({ where: { ptsLeft: MoreThanOrEqual(1) }, order: { id: 'ASC' } });
   const allHandlers = await ds.getRepository(ConversionHandler).find({ order: { id: 'ASC' } });

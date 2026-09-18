@@ -1,4 +1,4 @@
-import { In, QueryFailedError } from 'typeorm';
+import { In } from 'typeorm';
 import { clearDb } from '../clear-db';
 import { Conversion } from '../entities/conversion';
 import { ConversionStatus, ImageFormat } from '../entities/enums';
@@ -8,6 +8,8 @@ import { seed } from '../seed-fn';
 import { withDataSourceInitialization } from '../with-data-source-initialization';
 import { ConversionHandler } from '../entities/conversion-handler';
 import { ConvertedVersion } from '../entities/converted-version';
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 withDataSourceInitialization(async ds => {
   await clearDb(ds);
@@ -41,6 +43,7 @@ withDataSourceInitialization(async ds => {
     const runner = ds.createQueryRunner();
     try {
       await runner.connect();
+      let attempt = 0;
       while (true) {
         try {
           await runner.startTransaction('SERIALIZABLE');
@@ -52,7 +55,7 @@ withDataSourceInitialization(async ds => {
             `SELECT destination_format FROM conversions WHERE id = $1`,
             [conversionId]
           );
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await sleep(200);
           await runner.query(
             `INSERT INTO converted_versions (source_image_id, format, size, storage_url) VALUES ($1, $2, $3, $4)`,
             [siId, destinationFormat, '1000', `https://example.com/img${i+1}-out.png`]
@@ -78,6 +81,7 @@ AND NOT EXISTS (SELECT 1 FROM source_images si WHERE si.conversion_id = c.id AND
           const errorCode = (error as any)?.code;
           if (errorCode === '40001' || errorCode === '40P01') {
             console.log('Serialization failure, retrying...');
+            await sleep(2 ** attempt++ * 10);
 
             continue;
           }
