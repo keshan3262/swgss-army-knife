@@ -16,4 +16,7 @@ export class User {
 
   @OneToMany(() => Conversion, (conversion) => conversion.user)
   conversions!: Conversion[];
+
+  @Column({ type: 'integer', default: 10 })
+  ptsLeft!: number;
 }

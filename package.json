@@ -14,6 +14,9 @@
     "migrate:show": "bash scripts/with-secrets.sh typeorm migration:show -d dist/data-source.js",
     "migrate:revert": "bash scripts/with-secrets.sh typeorm migration:revert -d dist/data-source.js",
     "demo:nplus1": "bash scripts/with-secrets.sh node dist/demo-nplus1.js",
+    "demo:race": "npm run seed && bash scripts/with-secrets.sh node dist/scripts/race.js",
+    "demo:workers": "bash scripts/with-secrets.sh node dist/scripts/workers.js",
+    "demo:retry": "bash scripts/with-secrets.sh node dist/scripts/retry.js",
     "report": "bash scripts/with-secrets.sh node dist/report.js",
     "seed": "bash scripts/with-secrets.sh node dist/seed.js"
   },

@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import { DataSource, AbstractLogger, LogMessage, LogLevel } from 'typeorm';
-import { readFile } from 'node:fs/promises';
 import { Conversion } from './entities/conversion';
 import { User } from './entities/user';
 import { SourceImage } from './entities/source-image';
 import { ConvertedVersion } from './entities/converted-version';
 import path from 'node:path';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { ConversionHandler } from './entities/conversion-handler';
 
 export class QueryCountLogger extends AbstractLogger {
   count = 0;
@@ -39,7 +39,7 @@ export const logger = new QueryCountLogger(['query', 'schema']);
 export const dataSource = new DataSource({
   type: 'postgres',
   url: process.env.DB_URL!,
-  entities: [User, Conversion, SourceImage, ConvertedVersion],
+  entities: [User, Conversion, SourceImage, ConvertedVersion, ConversionHandler],
   migrations: [path.join(__dirname, '../dist/migrations/*.js')],
   logger: logger,
   synchronize: false,

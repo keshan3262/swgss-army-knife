@@ -62,4 +62,9 @@ INSERT INTO converted_versions (source_image_id, format, size, storage_url)
   ) as x
   JOIN source_images si ON si.id = x.source_image_id;
 
-VACUUM (ANALYZE) users, conversions, source_images, converted_versions;
+INSERT INTO conversion_handlers (name, source_formats, destination_formats, pts_left)
+  VALUES
+    ('oxipng', ARRAY['png'::image_format], ARRAY['png'::image_format], 10),
+    ('svgo', ARRAY['svg'::image_format], ARRAY['svg'::image_format], 10);
+
+VACUUM (ANALYZE) users, conversions, source_images, converted_versions, conversion_handlers;

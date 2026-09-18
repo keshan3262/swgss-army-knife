@@ -145,37 +145,13 @@ Start docker containers with command `docker compose up -d --wait`. Then set env
 
 Before running scripts, install node modules (`npm install`) and build the project (`npm run build`).
 
-After each run of `seed` script, expect to see the same amount of all entities, see an example of terminal input/output, which contains commands and the expected output, below.
+## Concurrency
 
-```
-MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM users;"
- count 
--------
-     5
-(1 row)
+For `demo:race`, `UPDATE … SET … WHERE … RETURNING …` approach is used instead of locking rows for update because locking adds delays and gives no benefits since the value updates are simple decrements without `SELECT` statements. Expect 20 successful attempts of 50.
 
-MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM conversions;"
- count 
--------
-     6
-(1 row)
+If you run `demo:workers` after `demo:race` not changing anything in the database, expect even distribution of tasks (15 * 4), the execution time close to ideal parallel execution (like 1697 ms, ideal is 1500 ms), and 0 rows processed more than once.
 
-MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM source_images;"
- count 
--------
-    12
-(1 row)
-
-MacBook-Pro-Inokentii:swgss-army-knife inokentiimazhara$ psql $DB_URL -c "SELECT COUNT(*) FROM converted_versions;"
- count 
--------
-     5
-(1 row)
-```
-
-After running `demo:nplus1` scripts, expect to see 3 SQL queries for requests in a loop ("N+1") and 1 request after a fix ("with relations").
-
-For TypeORM requests, `Repository` will be used whenever it possible to do an operation with one request without aggregating results using TypeScript code or fetching much more data than necessary, like getting an amount of related entities for each "parent" entity or getting an entity with its relations. Otherwise, a `QueryBuilder` will be used.
+For `demo:retry` script, expect 1 retry of a transaction. Retry is done only for codes `40001` and `40P01` because the first one is a serialization error, and the second one is a deadlock error, so both are retryable.
 
 ## Architectural decisions record
 

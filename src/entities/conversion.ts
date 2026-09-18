@@ -6,6 +6,7 @@ import { SourceImage } from './source-image';
 @Entity('conversions')
 @Index('idx_conversions_user_id', ['user.id'])
 @Index('idx_failed_conversions', ['createdAt'], { where: "status = 'failed'" })
+@Index('idx_pending_conversions', ['createdAt'], { where: "status = 'pending'" })
 export class Conversion {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id!: string;
