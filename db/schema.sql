@@ -1,7 +1,9 @@
 CREATE TABLE users (
-  id         bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  email      text NOT NULL UNIQUE CHECK (email ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' AND length(email) <= 254),
-  username   text NOT NULL UNIQUE CHECK (username ~ '^[a-zA-Z0-9_-]+$' AND length(username) <= 32 AND length(username) >= 3)
+  id                  bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email               text NOT NULL UNIQUE CHECK (email ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' AND length(email) <= 254),
+  username            text NOT NULL UNIQUE CHECK (username ~ '^[a-zA-Z0-9_-]+$' AND length(username) <= 32 AND length(username) >= 3),
+  -- TODO: Improve rate limiting
+  pts_left            integer NOT NULL DEFAULT 10
 );
 
 CREATE TYPE image_format AS ENUM ('jpeg', 'png', 'webp', 'gif', 'avif', 'svg');
@@ -23,6 +25,8 @@ CREATE TABLE source_images (
   original_name      text NOT NULL CHECK (length(original_name) <= 255 AND length(original_name) >= 1),
   size               bigint NOT NULL CHECK (size > 0),
   storage_url        text NOT NULL UNIQUE CHECK (storage_url ~ '^https?://'),
+  processed          integer NOT NULL DEFAULT 0,
+  worker             text,
   conversion_error   text
 );
 
@@ -33,4 +37,13 @@ CREATE TABLE converted_versions (
   size               bigint NOT NULL CHECK (size > 0),
   storage_url        text NOT NULL UNIQUE CHECK (storage_url ~ '^https?://'),
   created_at         timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE conversion_handlers (
+  id                  bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name                text NOT NULL,
+  source_formats      image_format[] NOT NULL,
+  destination_formats image_format[] NOT NULL,
+  -- TODO: Improve rate limiting
+  pts_left            integer NOT NULL DEFAULT 10
 );

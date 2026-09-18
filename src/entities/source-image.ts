@@ -31,6 +31,12 @@ export class SourceImage {
   @Column({ type: 'text', nullable: true })
   conversionError!: string | null;
 
+  @Column({ type: 'integer', default: 0 })
+  processed!: number;
+
+  @Column({ type: 'text', nullable: true })
+  worker!: string | null;
+
   @OneToOne(() => ConvertedVersion, (convertedVersion) => convertedVersion.sourceImage, { nullable: true })
   convertedVersion!: ConvertedVersion | null;
 }
