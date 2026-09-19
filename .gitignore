@@ -24,3 +24,5 @@ logs/
 
 secrets/*
 !secrets/*.example
+
+backups/*

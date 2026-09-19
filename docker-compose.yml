@@ -1,6 +1,6 @@
-name: hw-13
+name: swgss-army-knife
 services:
-  hw-13:
+  server:
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,14 +9,32 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
-      - DB_URL=${DB_URL:-postgresql://admin:admin-bootstrap-only@postgres:5432/swgss-army-knife}
+      - DB_URL=${DB_URL:-postgresql://admin:admin-bootstrap-only@pgbouncer:5432/swgss-army-knife}
       - SKIP_VAULT=1
     depends_on:
       redis:
         condition: service_healthy
-      postgres:
+      pgbouncer:
         condition: service_healthy
-  postgres:
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.24.1-p1
+    ports:
+      - "20003:5432"
+    volumes:
+      - ./infra/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./infra/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    depends_on:
+      primary:
+        condition: service_healthy
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "PGPASSWORD=admin-bootstrap-only psql -h primary -p 5432 -U admin -d swgss-army-knife -c 'SELECT 1' >/dev/null"
+      ]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  primary:
     image: postgres:17
     ports:
       - 20001:5432
@@ -24,15 +42,94 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin-bootstrap-only
       POSTGRES_DB: swgss-army-knife
+    command: >
+      -c max_connections=30
+      -c wal_level=logical
+      -c max_wal_senders=10
+      -c wal_keep_size=128MB
+      -c archive_mode=on
+      -c archive_command='test ! -f /wal_archive/%f && cp %p /wal_archive/%f'
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ./init-pg.sql:/docker-entrypoint-initdb.d/init-pg.sql
+      - wal-archive:/wal_archive
+      - basebackup:/basebackup
+      - ./infra/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "admin", "-d", "swgss-army-knife"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U admin -d swgss-army-knife"]
+      interval: 2s
       timeout: 3s
-      retries: 3
-      start_period: 5s
+      retries: 30
+  replica:
+    image: postgres:17
+    ports:
+      - 20002:5432
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin-bootstrap-only
+      POSTGRES_DB: swgss-army-knife
+    entrypoint: ["/bin/bash", "/replica-entrypoint.sh"]
+    volumes:
+      - pgdata-replica:/var/lib/postgresql/data
+      - ./infra/replica/replica-entrypoint.sh:/replica-entrypoint.sh:ro
+    depends_on:
+      primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d swgss-army-knife"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  restore:
+    image: postgres:17
+    profiles: ["drill"]
+    ports:
+      - "20004:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin-bootstrap-only
+      POSTGRES_DB: swgss-army-knife
+    volumes:
+      - pgdata-restore:/var/lib/postgresql/data
+      - wal-archive:/wal_archive:ro
+      - basebackup:/basebackup
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d swgss-army-knife"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  pitr:
+    image: postgres:17
+    profiles: ["pitr"]
+    ports:
+      - "20005:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin-bootstrap-only
+    volumes:
+      - pgdata-pitr:/var/lib/postgresql/data
+      - wal-archive:/wal_archive:ro
+      - basebackup:/basebackup
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d swgss-army-knife"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+  logical:
+    image: postgres:17
+    profiles: ["logical"]
+    ports:
+      - "20006:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin-bootstrap-only
+      POSTGRES_DB: swgss-army-knife
+    volumes:
+      - pgdata-logical:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d swgss-army-knife"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
   redis:
     image: redis:8.10.1
     volumes:
@@ -49,3 +146,9 @@ services:
 volumes:
   redis_data:
   pg_data:
+  wal-archive:
+  basebackup:
+  pgdata-replica:
+  pgdata-restore:
+  pgdata-logical:
+  pgdata-pitr:
