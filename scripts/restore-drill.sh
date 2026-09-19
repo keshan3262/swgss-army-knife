@@ -42,4 +42,3 @@ else
 fi
 
 echo "Restored in $(secs $RESTORE_TIME)s (RTO ≈ container startup time + $(secs $RESTORE_TIME)s)"
-  
